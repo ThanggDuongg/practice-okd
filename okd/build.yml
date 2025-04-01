@@ -1,0 +1,40 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: todo-build
+labels:
+  app: build
+objects:
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      name: ${METADATA_NAME}-bc
+    spec:
+      resources:
+        requests:
+          cpu: "1"
+          memory: "2Gi"
+        limits:
+          cpu: "4"
+          memory: "2Gi"
+      output:
+        pushSecret:
+          name: artifactory
+        to:
+          kind: DockerImage
+          name: artifactory-server/duot/${METADATA_NAME}:${CONTAINER_IMAGE_VERSION}
+      source:
+        type: Binary
+      strategy:
+        type: Docker
+        dockerStrategy:
+          dockerfilePath: ${DOCKERFILE_PATH}
+          pullSecret:
+            name: artifactory
+parameters:
+  - name: CONTAINER_IMAGE_VERSION
+    description: Version of the container image to build
+  - name: DOCKERFILE_PATH
+    description: Dockerfile path #backend/Dockerfile
+  - name: METADATA_NAME
+    description: Name of the metadata

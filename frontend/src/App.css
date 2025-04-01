@@ -1,0 +1,51 @@
+.todo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #333; /* Dark background */
+  padding: 10px;
+  border-radius: 5px;
+  margin: 5px 0;
+  color: white;
+}
+
+.todo span {
+  flex: 1; /* Allows the text to take up available space */
+  margin-right: 10px;
+}
+
+.todo select {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #555;
+  background: #222;
+  color: white;
+  margin-right: 10px;
+}
+
+.todo button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button.edit {
+  background-color: #f0ad4e; /* Orange */
+  color: white;
+  margin-right: 5px;
+}
+
+button.delete {
+  background-color: #d9534f; /* Red */
+  color: white;
+}
+
+button.edit:hover {
+  background-color: #ec971f;
+}
+
+button.delete:hover {
+  background-color: #c9302c;
+}

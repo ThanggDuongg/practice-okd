@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "Status" AS ENUM ('NOT_DONE_YET', 'IN_PROGRESS', 'COMPLETED');
+
+-- AlterTable
+ALTER TABLE "Todo" ADD COLUMN     "status" "Status" NOT NULL DEFAULT 'NOT_DONE_YET';

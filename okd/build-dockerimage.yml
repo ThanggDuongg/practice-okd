@@ -1,0 +1,34 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: todo-build
+labels:
+  app: build
+objects:
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      name: ${METADATA_NAME}-bc
+    spec:
+      source:
+        type: None
+      strategy:
+        type: Source
+        sourceStrategy:
+          from:
+            kind: DockerImage
+            name: ${DOCKERIMAGE_PATH}
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "4"
+              memory: "2Gi"
+parameters:
+  - name: CONTAINER_IMAGE_VERSION
+    description: Version of the container image to build
+  - name: DOCKERFILE_PATH
+    description: Dockerfile path #backend/Dockerfile
+  - name: METADATA_NAME
+    description: Name of the metadata

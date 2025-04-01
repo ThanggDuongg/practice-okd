@@ -1,0 +1,65 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: todo-graphql-deploy
+labels:
+  app.kubernetes.io/name: todo
+  app.kubernetes.io/instance: todo-main
+  app.kubernetes.io/component: backend
+  app.kubernetes.io/part-of: todo
+objects:
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: todo-graphql
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: todo-graphql-main
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/instance: todo-graphql-main
+          # annotations:
+          #   containerid: ${CONTAINER_ID}
+        spec:
+          containers:
+            - name: todo-graphql
+              image: artifactory-server/duot/${METADATA_NAME}:${CONTAINER_IMAGE_VERSION}
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  cpu: "1"
+                  memory: 2Gi
+                requests:
+                  cpu: 100m
+                  memory: 2Gi
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: todo-graphql
+    spec:
+      ports:
+        - name: todo-graphql-main
+          port: 3000
+      selector:
+        app.kubernetes.io/instance: todo-graphql-main
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: todo-graphql
+    spec:
+      host: host-name
+      to:
+        kind: Service
+        name: todo-graphql
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+parameters:
+  # - name: CONTAINER_ID
+  - name: METADATA_NAME
+    description: Name of the metadata
+  - name: CONTAINER_IMAGE_VERSION
+    description: Version of the container image to build

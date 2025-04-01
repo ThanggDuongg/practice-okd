@@ -1,0 +1,125 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: todo-configmap-secret
+labels:
+  app.kubernetes.io/name: todo
+  app.kubernetes.io/instance: todo-main
+  app.kubernetes.io/component: database
+  app.kubernetes.io/part-of: todo
+objects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: postgresql-todo-configmap
+    data:
+      db: ${DB_NAME}
+      username: ${DB_USERNAME}
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: postgresql-todo-secret
+    type: Opaque
+    stringData:
+      password: ${DB_PASSWORD}
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: postgresql-todo-pvc
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: postgresql-todo-vol
+      labels:
+        app.kubernetes.io/instance: postgresql-todo-main
+    spec:
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: postgresql-todo-main
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/instance: postgresql-todo-main
+        spec:
+          containers:
+            - env:
+              - name: POSTGRES_DB
+                valueFrom:
+                  configMapKeyRef:
+                    name: postgresql-todo-configmap
+                    key: db
+              - name: POSTGRES_USER
+                valueFrom:
+                  configMapKeyRef:
+                    name: postgresql-todo-configmap
+                    key: username
+              - name: POSTGRES_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: postgresql-todo-secret
+                    key: password
+              image: artifactory-server/bitnami/postgresql:17.2.0
+              name: postgresql-todo
+              securityContext:
+                allowPrivilegeEscalation: true
+              ports:
+                - containerPort: 5432
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 1Gi
+                limits:
+                  cpu: 1
+                  memory: 2Gi
+              startupProbe:
+                failureThreshold: 3
+                periodSeconds: 30
+                successThreshold: 1
+                tcpSocket:
+                  port: 5432
+                timeoutSeconds: 1
+              livenessProbe:
+                failureThreshold: 10
+                periodSeconds: 30
+                successThreshold: 1
+                tcpSocket:
+                  port: 5432
+                timeoutSeconds: 1
+              readinessProbe:
+                failureThreshold: 3
+                periodSeconds: 30
+                successThreshold: 1
+                tcpSocket:
+                  port: 5432
+                timeoutSeconds: 1
+              volumeMounts:
+                - mountPath: /var/lib/postgresql/data
+                  name: postgres-pv
+          volumes:
+            - name: postgres-pv
+              persistentVolumeClaim:
+                claimName: postgresql-todo-pvc
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: postgresql-todo-service
+    spec:
+      ports:
+        - name: postgresql
+          port: 5432
+      selector:
+        app.kubernetes.io/instance: postgresql-todo-main
+parameters:
+  - description: Database name
+    name: DB_NAME
+  - description: Database username
+    name: DB_USERNAME
+  - description: Database password
+    name: DB_PASSWORD

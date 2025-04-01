@@ -1,0 +1,65 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: todo-web-deploy
+labels:
+  app.kubernetes.io/name: todo
+  app.kubernetes.io/instance: todo-main
+  app.kubernetes.io/component: frontend
+  app.kubernetes.io/part-of: todo
+objects:
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: todo-web
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app.kubernetes.io/instance: todo-web-main
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/instance: todo-web-main
+          # annotations:
+          #   containerid: ${CONTAINER_ID}
+        spec:
+          containers:
+            - name: todo-web
+              image: artifactory-server/duot/${METADATA_NAME}:${CONTAINER_IMAGE_VERSION}
+              imagePullPolicy: Always
+              resources:
+                limits:
+                  cpu: "1"
+                  memory: 2Gi
+                requests:
+                  cpu: 100m
+                  memory: 2Gi
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: todo-web
+    spec:
+      ports:
+        - name: todo-web
+          port: 3001
+      selector:
+        app.kubernetes.io/instance: todo-web-main
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: todo-web
+    spec:
+      host: host-name
+      to:
+        kind: Service
+        name: todo-web
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+parameters:
+  # - name: CONTAINER_ID
+  - name: METADATA_NAME
+    description: Name of the metadata
+  - name: CONTAINER_IMAGE_VERSION
+    description: Version of the container image to build
